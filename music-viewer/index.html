@@ -17,7 +17,6 @@
       <header class="view-header">
         <p class="crumb"><a href="../index.html">← 返回工具集</a></p>
         <h1>Music Viewer</h1>
-        <p class="sub">上传音乐与封面，生成适合录屏的音乐播放页</p>
       </header>
 
       <form id="setupForm" class="setup-form" novalidate>
@@ -59,12 +58,13 @@
           <button type="submit" id="startBtn" class="primary" disabled>
             开始播放 <span class="arr">→</span>
           </button>
+          <p class="hint-line">进入播放页后，点击任意处即可 播放 / 暂停</p>
         </div>
       </form>
     </div>
 
     <input type="file" id="fileCover" accept="image/*" hidden>
-    <input type="file" id="fileAudio" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac" hidden>
+    <input type="file" id="fileAudio" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac" hidden>
     <input type="file" id="fileLrc" accept=".lrc,.txt,text/plain" hidden>
   </section>
 
@@ -74,24 +74,21 @@
     <div class="player">
       <div class="player-main">
         <div class="art-stack">
-          <div class="meta">
-            <h2 id="displayTitle">歌曲标题</h2>
-            <p id="displayArtist">歌手</p>
-          </div>
           <div class="cover-frame" id="coverFrame">
             <img id="coverImg" alt="album cover">
             <span class="cf-note">♪</span>
           </div>
+          <div class="meta">
+            <h2 id="displayTitle">歌曲标题</h2>
+            <p id="displayArtist">歌手</p>
+          </div>
         </div>
 
         <div class="lyrics-wrap">
-          <div class="lyrics-glow"></div>
           <div class="lyrics-scroller" id="lyricsScroller"></div>
         </div>
       </div>
     </div>
-
-    <div class="click-hint" id="clickHint">点击任意处 播放 / 暂停</div>
   </section>
 
   <audio id="audioEl" preload="metadata"></audio>

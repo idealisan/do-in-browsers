@@ -1,85 +1,86 @@
-If the user has not uploaded and filled requried fields, use this page to let them do.
-
-                                                                                          
-    ┌────────────────────────────────────────────────────────────────────────────────┐    
-    │                                                                                │    
-    │                                                                                │    
-    │    ───title──input─box                                                         │    
-    │    ───artist─input box                                                         │    
-    │    ┌───────────────────────────┐                                               │    
-    │    │                           │                                               │    
-    │    │                           │                                               │    
-    │    │                           │           click to upload an lrc file         │    
-    │    │    upload image button    │                 ┌────────────┐                │    
-    │    │       ┌──────────┐        │                 │            │                │    
-    │    │       │          │        │                 └────────────┘                │    
-    │    │       └──────────┘        │                                               │    
-    │    │                           │                                               │    
-    │    │                           │                                               │    
-    │    │                           │                                               │    
-    │    └───────────────────────────┘                                               │    
-    │                                                                                │    
-    ├────────────────────────────────────────────────────────────────────────────────┤    
-    │   x x  xx   xx    x xx    xx     x                   x       xx xx         xxx │    
-    │  xxxxxxxxxxxxxxxxxx xxxBackgroundxaurora lightxeffect areaxxx     xxxxx xxxxxx │    
-    │xxx xxx xx x xx  x  xxxxxxx xx xxxxxxxxxxx xxx xx xxxxxxxxxxxxxxx x  xxxxx xxxx │    
-    └────────────────────────────────────────────────────────────────────────────────┘    
-                                                                                          
-Then this is the page for plsying music.
-
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                                                                                │
-│                                                                                │
-│    ───title──────────                                                          │
-│    ───artist───                                                                │
-│    ┌───────────────────────────┐      ───────────────────────────────          │
-│    │                           │                                               │
-│    │                           │      ──────────────────────                   │
-│    │                           │                                               │
-│    │                           │      ──────────────────────────               │
-│    │   album cover image       │                                               │
-│    │                           │      ──────lyrics─────────────                │
-│    │                           │                                               │
-│    │                           │      ──────lrc files, auto scroll up─         │
-│    │                           │                                               │
-│    │                           │      ───────────────────────────────────      │
-│    └───────────────────────────┘                                               │
-│                                       ────────────────────────────────────     │
-├────────────────────────────────────────────────────────────────────────────────┤
-│   x x  xx   xx    x xx    xx     x                   x       xx xx         xxx │
-│  xxxxxxxxxxxxxxxxxx xxxBackgroundxaurora lightxeffect areaxxx     xxxxx xxxxxx │
-│xxx xxx xx x xx  x  xxxxxxx xx xxxxxxxxxxx xxx xx xxxxxxxxxxxxxxx x  xxxxx xxxx │
-└────────────────────────────────────────────────────────────────────────────────┘
-
-
-Phone layout:
-                                       
-   ┌───────────────────────────────┐   
-   │                               │   
-   │                               │   
-   │                               │   
-   │  ┌─────────┐                  │   
-   │  │         │  title           │   
-   │  │cover    │                  │   
-   │  │         │  artist          │   
-   │  └─────────┘                  │   
-   │                               │   
-   │                               │   
-   │   ─────────────               │   
-   │                               │   
-   │   ────                        │   
-   │                               │   
-   │   ──lyrics                    │   
-   │                               │   
-   │   ───────────                 │   
-   │                               │   
-   │   ──────────────              │   
-   │                               │   
-   │   ─────────────────           │   
-   ├───────────────────────────────┤   
-   │                               │   
-   │                               │   
-   │     aurora light effect area  │   
-   │                               │   
-   └───────────────────────────────┘   
-                                       
+                                                                                                                                  
+                                                                                                                                  
+    A user can pause / play by clicking anywhere on he playing page.                                                              
+    The playing page should be clean with no play control. the lyric area should be blurred at top and bottom without box lines.  
+   ┌────────────────────────────────────────────────────────────────────────────────┐                                             
+   │                                                                                │                                             
+   │                                                                                │                                             
+   │    ───title──────────                                                          │                                             
+   │    ───artist───                                                                │                                             
+   │    ┌───────────────────────────┐      ───────────────────────────────          │                                             
+   │    │                           │                                               │                                             
+   │    │                           │      ──────────────────────                   │                                             
+   │    │                           │                                               │                                             
+   │    │                           │      ──────────────────────────               │                                             
+   │    │   album cover image       │                                               │                                             
+   │    │                           │      ─────────────────────────────            │                                             
+   │    │                           │                                               │                                             
+   │    │                           │      ────────────────────────────────         │                                             
+   │    │                           │                                               │                                             
+   │    │                           │      ───────────────────────────────────      │                                             
+   │    └───────────────────────────┘                                               │                                             
+   │                                       ────────────────────────────────────     │                                             
+   ├────────────────────────────────────────────────────────────────────────────────┤                                             
+   │   x x  xx   xx    x xx    xx     x                   x       xx xx         xxx │                                             
+   │  xxxxxxxxxxxxxxxxxx xxxBackgroundxaurora lightxeffect areaxxx     xxxxx xxxxxx │                                             
+   │xxx xxx xx x xx  x  xxxxxxx xx xxxxxxxxxxx xxx xx xxxxxxxxxxxxxxx x  xxxxx xxxx │                                             
+   └────────────────────────────────────────────────────────────────────────────────┘                                             
+                                                                                                                                  
+                                                                                                                                  
+                                                                                                                                  
+     ┌────────────────────────────────────────────────────────────────────────────────┐                                           
+     │                                                                                │                                           
+     │                                                                                │                                           
+     │    ───title──input─box                                                         │                                           
+     │    ───artist─input box                    click to upload an lrc file          │                                           
+     │    ┌───────────────────────────┐                ┌────────────┐                 │                                           
+     │    │                           │                │            │                 │                                           
+     │    │                           │                └────────────┘                 │                                           
+     │    │                           │                                               │                                           
+     │    │    upload image button    │          click to upload an audio file        │                                           
+     │    │       ┌──────────┐        │                ┌────────────┐                 │                                           
+     │    │       │          │        │                │            │                 │                                           
+     │    │       └──────────┘        │                └────────────┘                 │                                           
+     │    │                           │                                               │                                           
+     │    │    Tip:click cover to pause or play                                       │                                           
+     │    │                           │                                               │                                           
+     │    └───────────────────────────┘                                               │                                           
+     │                                                                                │                                           
+     ├────────────────────────────────────────────────────────────────────────────────┤                                           
+     │   x x  xx   xx    x xx    xx     x                   x       xx xx         xxx │                                           
+     │  xxxxxxxxxxxxxxxxxx xxxBackgroundxaurora lightxeffect areaxxx     xxxxx xxxxxx │                                           
+     │xxx xxx xx x xx  x  xxxxxxx xx xxxxxxxxxxx xxx xx xxxxxxxxxxxxxxx x  xxxxx xxxx │                                           
+     └────────────────────────────────────────────────────────────────────────────────┘                                           
+                                                                                                                                  
+                                                                                                                                  
+       On phones, top and bottom should never have text or image content. They are safe border to be reseved.                     
+      ┌───────────────────────────────┐                                                                                           
+      │                               │                                                                                           
+      │                               │                                                                                           
+      │                               │                                                                                           
+      │  ┌─────────┐                  │                                                                                           
+      │  │         │  title           │                                                                                           
+      │  │cover    │                  │                                                                                           
+      │  │         │  artist          │                                                                                           
+      │  └─────────┘                  │                                                                                           
+      │                               │                                                                                           
+      │                               │                                                                                           
+      │   ─────────────               │                                                                                           
+      │                               │                                                                                           
+      │   ────                        │                                                                                           
+      │                               │                                                                                           
+      │   ──lyrics                    │                                                                                           
+      │                               │                                                                                           
+      │   ───────────                 │                                                                                           
+      │                               │                                                                                           
+      │   ──────────────              │                                                                                           
+      │                               │                                                                                           
+      │   ─────────────────           │                                                                                           
+      ├───────────────────────────────┤                                                                                           
+      │                               │                                                                                           
+      │                               │                                                                                           
+      │     aurora light effect areamusic                                                                                         
+      │                               │                                                                                           
+      └───────────────────────────────┘                                                                                           
+                                                                                                                                  
+                                                                                                                                  
