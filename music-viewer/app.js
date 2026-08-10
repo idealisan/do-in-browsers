@@ -20,20 +20,11 @@ const els = {
   fileLrc: $('#fileLrc'),
   auroraSetup: $('#auroraSetup'),
   auroraPlayer: $('#auroraCanvas'),
-  disc: $('#disc'),
-  discLabel: document.querySelector('.disc-label'),
-  discCover: $('#discCover'),
+  coverFrame: $('#coverFrame'),
+  coverImg: $('#coverImg'),
   displayTitle: $('#displayTitle'),
   displayArtist: $('#displayArtist'),
   lyricsScroller: $('#lyricsScroller'),
-  timeCur: $('#timeCur'),
-  timeDur: $('#timeDur'),
-  seek: $('#seek'),
-  volume: $('#volume'),
-  btnPlay: $('#btnPlay'),
-  btnEdit: $('#btnEdit'),
-  btnRepeat: $('#btnRepeat'),
-  btnFull: $('#btnFull'),
   audio: $('#audioEl'),
 };
 
@@ -44,8 +35,6 @@ const state = {
   audioUrl: null,
   lrc: [],
 };
-
-let playing = false;
 
 /* ================= Aurora ================= */
 
@@ -167,7 +156,7 @@ function ensureGraph() {
     analyserNode.fftSize = 1024;
     analyserNode.smoothingTimeConstant = 0.84;
     gainNode = actx.createGain();
-    gainNode.gain.value = Number(els.volume.value);
+    gainNode.gain.value = 1;
     const src = actx.createMediaElementSource(els.audio);
     src.connect(analyserNode);
     analyserNode.connect(gainNode);
@@ -196,7 +185,7 @@ function resumeAudio() {
   }
 }
 
-/* ================= Playback ================= */
+/* ================= Playback (click anywhere) ================= */
 
 function togglePlay() {
   if (!els.audio.src) return;
@@ -208,104 +197,24 @@ function togglePlay() {
   }
 }
 
-function setVol(v) {
-  els.volume.style.setProperty('--fill', (v * 100).toFixed(1) + '%');
-  if (gainNode) gainNode.gain.value = v;
-  else els.audio.volume = v;
-}
+els.playerView.addEventListener('click', togglePlay);
 
-function showControls() {
-  clearTimeout(idleTimer);
-  els.playerView.classList.remove('controls-hidden');
-  if (playing) {
-    idleTimer = setTimeout(() => {
-      if (playing) els.playerView.classList.add('controls-hidden');
-    }, 2600);
-  }
-}
-
-let idleTimer = null;
-
-els.btnPlay.addEventListener('click', togglePlay);
-
-els.volume.addEventListener('input', () => setVol(Number(els.volume.value)));
-
-els.seek.addEventListener('input', () => {
-  const d = els.audio.duration || 0;
-  if (!d) return;
-  const t = (Number(els.seek.value) / 1000) * d;
-  els.audio.currentTime = t;
-  updateSeekFill();
-  updateLyric(t);
-});
-
-function updateSeekFill() {
-  const pct = (Number(els.seek.value) / 10).toFixed(1);
-  els.seek.style.setProperty('--fill', pct + '%');
-}
-
-els.btnRepeat.addEventListener('click', () => {
-  els.audio.loop = !els.audio.loop;
-  els.btnRepeat.classList.toggle('on', els.audio.loop);
-});
-
-els.btnFull.addEventListener('click', () => {
-  if (document.fullscreenElement) {
-    document.exitFullscreen();
-  } else {
-    document.documentElement.requestFullscreen().catch(() => {});
-  }
-});
-document.addEventListener('fullscreenchange', () => {
-  document.body.classList.toggle('fullscreen', !!document.fullscreenElement);
-});
-
-els.audio.addEventListener('loadedmetadata', () => {
-  els.timeDur.textContent = fmtTime(els.audio.duration);
-  playHead();
-});
 els.audio.addEventListener('play', () => {
-  playing = true;
   document.body.classList.add('playing');
-  els.disc.classList.add('playing');
   if (barsFn) playerAurora.setSource(barsFn);
-  showControls();
+  updateLyric(els.audio.currentTime);
 });
 els.audio.addEventListener('pause', () => {
-  playing = false;
   document.body.classList.remove('playing');
-  els.disc.classList.remove('playing');
   playerAurora.setSource(null);
-  clearTimeout(idleTimer);
-  els.playerView.classList.remove('controls-hidden');
 });
 els.audio.addEventListener('ended', () => {
-  playing = false;
   document.body.classList.remove('playing');
-  els.disc.classList.remove('playing');
 });
 
 els.audio.addEventListener('timeupdate', () => {
-  playHead();
   updateLyric(els.audio.currentTime);
 });
-
-function playHead() {
-  const d = els.audio.duration || 0;
-  const pct = d ? (els.audio.currentTime / d) * 1000 : 0;
-  els.seek.value = String(Math.round(pct * 1000) / 1000);
-  updateSeekFill();
-  els.timeCur.textContent = fmtTime(els.audio.currentTime);
-  els.timeDur.textContent = fmtTime(els.audio.duration);
-}
-
-function fmtTime(sec) {
-  if (!isFinite(sec)) sec = 0;
-  sec = Math.max(0, Math.floor(sec));
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return m + ':' + String(s).padStart(2, '0');
-}
 
 /* ================= Lyrics ================= */
 
@@ -347,7 +256,7 @@ function renderLyrics() {
   if (!state.lrc.length) {
     const d = document.createElement('div');
     d.className = 'lyric-placeholder';
-    d.textContent = '未上传歌词 · 播放时可点击左下角返回补充 LRC 文件';
+    d.textContent = '未上传歌词';
     els.lyricsScroller.appendChild(d);
     lines = [];
     els.lyricsScroller.style.transform = '';
@@ -404,7 +313,8 @@ function centerOn(idx) {
 /* ================= Setup / upload ================= */
 
 function validate() {
-  const ok = !!state.audioUrl && els.titleInput.value.trim() && els.artistInput.value.trim();
+  const ok = !!state.audioUrl && !!state.coverUrl && state.lrc.length > 0 &&
+    !!els.titleInput.value.trim() && !!els.artistInput.value.trim();
   els.startBtn.disabled = !ok;
 }
 
@@ -423,8 +333,9 @@ bindFile(els.coverBtn, els.fileCover, (f) => {
   state.coverUrl = URL.createObjectURL(f);
   els.coverPreview.src = state.coverUrl;
   els.coverBtn.classList.add('done');
-  els.discCover.src = state.coverUrl;
-  els.discLabel.classList.add('has-cover');
+  els.coverImg.src = state.coverUrl;
+  els.coverFrame.classList.add('has-cover');
+  validate();
 });
 
 bindFile(els.audioBtn, els.fileAudio, (f) => {
@@ -462,17 +373,7 @@ els.setupForm.addEventListener('submit', (e) => {
   renderLyrics();
   switchView('player');
   els.audio.load();
-  els.timeCur.textContent = '0:00';
-  playHead();
-  resumeAudio();
-  els.audio.play().catch(() => {});
-  showControls();
-});
-
-els.btnEdit.addEventListener('click', () => {
-  els.audio.pause();
-  els.audio.currentTime = 0;
-  switchView('setup');
+  updateLyric(0);
 });
 
 function switchView(name) {
@@ -480,25 +381,9 @@ function switchView(name) {
   els.playerView.classList.toggle('active', name === 'player');
 }
 
-/* ================= Auto-hide controls / misc ================= */
-
-['pointerdown', 'pointermove', 'touchstart'].forEach((evt) => {
-  els.playerView.addEventListener(evt, showControls, { passive: true });
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.code !== 'Space') return;
-  if (els.setupView.classList.contains('active')) return;
-  const tag = document.activeElement && document.activeElement.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
-  e.preventDefault();
-  togglePlay();
-});
-
 window.addEventListener('beforeunload', () => {
   if (state.coverUrl) URL.revokeObjectURL(state.coverUrl);
   if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
 });
 
-setVol(Number(els.volume.value));
 validate();

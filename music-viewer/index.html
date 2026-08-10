@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#05060f">
 <title>Music Viewer · 音乐可视播放器</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23131313'/><circle cx='50' cy='50' r='20' fill='%237c6bff'/><text x='50' y='62' font-size='34' text-anchor='middle' fill='white'>♪</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='4' y='4' width='92' height='92' rx='10' fill='%2313131b'/><text x='50' y='66' font-size='54' text-anchor='middle' fill='%237c6bff'>♪</text></svg>">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,48 +21,43 @@
       </header>
 
       <form id="setupForm" class="setup-form" novalidate>
-        <div class="field-grid">
-          <label class="field required">
-            <span class="field-label">标题</span>
-            <input id="titleInput" type="text" placeholder="歌名 / 视频标题" autocomplete="off" spellcheck="false">
-          </label>
-          <label class="field required">
-            <span class="field-label">歌手</span>
-            <input id="artistInput" type="text" placeholder="歌手 / 艺术家" autocomplete="off" spellcheck="false">
-          </label>
-        </div>
+        <label class="field required">
+          <span class="field-label">标题 · title</span>
+          <input id="titleInput" type="text" placeholder="歌名 / 视频标题" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="field required">
+          <span class="field-label">歌手 · artist</span>
+          <input id="artistInput" type="text" placeholder="歌手 / 艺术家" autocomplete="off" spellcheck="false">
+        </label>
 
-        <div class="upload-grid">
+        <div class="upload-row">
           <button type="button" id="coverBtn" class="dropzone cover-zone">
-            <img id="coverPreview" alt="">
-            <span class="dz-hint">
-              <span class="dz-ico">🖼️</span>
-              <span>上传封面图片</span>
-              <span class="dz-opt">可选 · 正方形效果最佳</span>
+            <span class="cover-thumb">
+              <img id="coverPreview" alt="">
+              <span class="cover-note">♪</span>
             </span>
+            <span class="dz-hint">上传图片 · 封面</span>
           </button>
 
-          <div class="file-stack">
-            <button type="button" id="audioBtn" class="dropzone required-zone">
-              <span id="audioLabel" class="dz-hint">
-                <span class="dz-ico">🎵</span>
-                <span>上传音频文件</span>
-                <span class="dz-opt">mp3 / wav / m4a / ogg</span>
-              </span>
-            </button>
-            <button type="button" id="lrcBtn" class="dropzone">
-              <span id="lrcLabel" class="dz-hint">
-                <span class="dz-ico">📝</span>
-                <span>上传 .lrc 歌词文件</span>
-                <span class="dz-opt">可选 · 带时间轴，播放时自动滚动</span>
-              </span>
-            </button>
+          <div class="side-uploads">
+            <div class="upload-item">
+              <span class="file-label">点击上传 .lrc 歌词文件</span>
+              <button type="button" id="lrcBtn" class="dropzone file-box">
+                <span id="lrcLabel" class="dz-hint">未选择文件</span>
+              </button>
+            </div>
+            <div class="upload-item">
+              <span class="file-label">点击上传音乐文件</span>
+              <button type="button" id="audioBtn" class="dropzone file-box">
+                <span id="audioLabel" class="dz-hint">未选择文件</span>
+              </button>
+            </div>
           </div>
         </div>
 
         <div class="actions">
           <button type="submit" id="startBtn" class="primary" disabled>
-            生成播放页 <span class="arr">→</span>
+            开始播放 <span class="arr">→</span>
           </button>
         </div>
       </form>
@@ -78,20 +73,14 @@
 
     <div class="player">
       <div class="player-main">
-        <div class="art-panel">
-          <div class="disc">
-            <div class="disc-rotor">
-              <div class="disc-vinyl"></div>
-              <div class="disc-label">
-                <img id="discCover" alt="album cover">
-              </div>
-              <div class="disc-hole"></div>
-            </div>
-            <div class="disc-shine"></div>
-          </div>
+        <div class="art-stack">
           <div class="meta">
             <h2 id="displayTitle">歌曲标题</h2>
             <p id="displayArtist">歌手</p>
+          </div>
+          <div class="cover-frame" id="coverFrame">
+            <img id="coverImg" alt="album cover">
+            <span class="cf-note">♪</span>
           </div>
         </div>
 
@@ -100,41 +89,9 @@
           <div class="lyrics-scroller" id="lyricsScroller"></div>
         </div>
       </div>
-
-      <div class="controls">
-        <div class="timeline-row">
-          <span id="timeCur" class="t">0:00</span>
-          <input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="进度">
-          <span id="timeDur" class="t">0:00</span>
-        </div>
-        <div class="controls-mid">
-        <div class="controls-left">
-          <button type="button" id="btnEdit" class="cbtn" title="返回编辑">
-            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-          </button>
-          <button type="button" id="btnRepeat" class="cbtn" title="循环播放">
-            <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
-          </button>
-        </div>
-
-        <button type="button" id="btnPlay" class="play-btn" aria-label="播放/暂停">
-          <svg class="ico-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="ico-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-        </button>
-
-        <div class="controls-right">
-          <div class="vol">
-            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
-            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.85" aria-label="音量">
-          </div>
-          <button type="button" id="btnFull" class="cbtn" title="全屏">
-            <svg class="ico-in" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-            <svg class="ico-out" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
-          </button>
-        </div>
-        </div>
-      </div>
     </div>
+
+    <div class="click-hint" id="clickHint">点击任意处 播放 / 暂停</div>
   </section>
 
   <audio id="audioEl" preload="metadata"></audio>
