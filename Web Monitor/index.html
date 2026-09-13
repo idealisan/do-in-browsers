@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Web Monitor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="launcher" class="launcher">
+    <h1>Web Monitor</h1>
+    <p class="lead">输入一个 JavaScript 文件地址，由它用本页提供的 Canvas 持续绘制。
+      框架负责屏幕常亮，内容与数据完全由你的插件决定。</p>
+    <div class="row">
+      <input id="script-url" type="url" placeholder="demo.js 或 https://example.com/panel.js"
+             spellcheck="false" autocomplete="off">
+      <button id="load-btn">开始显示</button>
+    </div>
+    <p id="err" class="err" hidden></p>
+    <details class="usage">
+      <summary>插件编写说明</summary>
+      <pre>插件只需要使用全局对象 Monitor：
+
+  Monitor.canvas  全屏画布元素
+  Monitor.ctx     2d 上下文（已按设备像素缩放，可直接用 CSS 像素坐标）
+  Monitor.width   画布逻辑宽度（px）
+  Monitor.height  画布逻辑高度（px）
+  Monitor.dpr     设备像素比
+  Monitor.onResize(fn)  尺寸变化时回调
+  Monitor.exit()  返回设置页
+
+数据获取：在插件里自行 fetch(url)，注意跨域需目标服务器允许。
+
+示例（demo.js）：
+
+  const raf = () =&gt; requestAnimationFrame(frame);
+  function frame() {
+    const { ctx, width, height } = Monitor;
+    ctx.fillStyle = '#05060a';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#2ee6a8';
+    ctx.font = Math.min(width, height) * 0.1 + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(new Date().toLocaleTimeString(), width/2, height/2);
+    raf();
+  }
+  raf();</pre>
+    </details>
+    <p class="hint">显示期间：长按 1.5 秒、双击或按 Esc 可返回设置。</p>
+  </div>
+
+  <main id="screen" hidden></main>
+
+  <div id="tap-prompt" class="tap-prompt" hidden>
+    <div>
+      <div class="tap-title">点击屏幕保持常亮</div>
+      <div class="tap-sub">Tap to keep the screen on</div>
+    </div>
+  </div>
+  <div id="status" class="status">正在请求屏幕唤醒锁…</div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
