@@ -236,5 +236,12 @@
   const saved = localStorage.getItem('webmonitor.script');
   input.value = saved || 'demo.js';
 
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(() => {});
+    });
+  }
+
   acquire();
 })();
