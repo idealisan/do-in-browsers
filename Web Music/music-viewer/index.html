@@ -3,64 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#05060f">
+<meta name="theme-color" content="#07080f">
 <title>Music Viewer · 音乐可视播放器</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='4' y='4' width='92' height='92' rx='10' fill='%2313131b'/><text x='50' y='66' font-size='54' text-anchor='middle' fill='%237c6bff'>♪</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='4' y='4' width='92' height='92' rx='22' fill='%230b0d18'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='%237c6bff'>♪</text></svg>">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <section id="setupView" class="view active">
-    <canvas id="auroraSetup" class="aurora" aria-hidden="true"></canvas>
+  <div class="bg" aria-hidden="true">
+    <div class="bg__glow bg__glow--a"></div>
+    <div class="bg__glow bg__glow--b"></div>
+    <div class="bg__glow bg__glow--c"></div>
+    <div class="bg__grain"></div>
+    <div class="bg__vignette"></div>
+  </div>
 
-    <div class="view-body">
-      <header class="view-header">
-        <p class="crumb"><a href="../index.html">← 返回工具集</a></p>
-        <h1>Music Viewer</h1>
+  <canvas class="spectrum" id="spectrum" aria-hidden="true"></canvas>
+
+  <!-- ══════════════ SETUP ══════════════ -->
+  <section id="setupView" class="view view--setup active">
+    <div class="setup">
+      <header class="setup__head">
+        <a class="link-back" href="../index.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          工具集
+        </a>
+        <h1 class="display">Music Viewer</h1>
+        <p class="lede">丢进音乐、封面和歌词，生成一页可以直接录屏的音乐视频。</p>
       </header>
 
-      <form id="setupForm" class="setup-form" novalidate>
-        <label class="field required">
-          <span class="field-label">标题 · title</span>
-          <input id="titleInput" type="text" placeholder="歌名 / 视频标题" autocomplete="off" spellcheck="false">
-        </label>
-        <label class="field required">
-          <span class="field-label">歌手 · artist</span>
-          <input id="artistInput" type="text" placeholder="歌手 / 艺术家" autocomplete="off" spellcheck="false">
-        </label>
+      <form id="setupForm" class="card" novalidate>
+        <div class="card__grid">
+          <div class="field" id="fieldTitle">
+            <label class="field__label" for="titleInput">标题 <span class="tag tag--req">必填</span></label>
+            <input id="titleInput" type="text" placeholder="歌名 / 视频标题" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="field" id="fieldArtist">
+            <label class="field__label" for="artistInput">歌手 <span class="tag tag--req">必填</span></label>
+            <input id="artistInput" type="text" placeholder="歌手 / 艺术家" autocomplete="off" spellcheck="false">
+          </div>
+        </div>
 
-        <div class="upload-row">
-          <button type="button" id="coverBtn" class="dropzone cover-zone">
-            <span class="cover-thumb">
-              <img id="coverPreview" alt="">
-              <span class="cover-note">♪</span>
-            </span>
-            <span class="dz-hint">上传图片 · 封面</span>
-          </button>
+        <hr class="rule">
 
-          <div class="side-uploads">
-            <div class="upload-item">
-              <span class="file-label">点击上传 .lrc 歌词文件</span>
-              <button type="button" id="lrcBtn" class="dropzone file-box">
-                <span id="lrcLabel" class="dz-hint">未选择文件</span>
+        <div class="assets">
+          <div class="assets__cover">
+            <button type="button" id="coverBtn" class="cover-drop" data-drop="image/*,.png,.jpg,.jpeg,.webp,.gif,.avif,.bmp,.svg">
+              <span class="cover-drop__frame">
+                <img id="coverPreview" alt="封面预览">
+                <span class="cover-drop__note" aria-hidden="true">♪</span>
+              </span>
+              <span class="cover-drop__label">封面</span>
+              <span class="cover-drop__hint">点击或拖入图片</span>
+            </button>
+            <p class="status" id="coverStatus"></p>
+          </div>
+
+          <div class="assets__files">
+            <div class="picker">
+              <div class="picker__head">
+                <span class="picker__name">音乐</span>
+                <span class="tag tag--req">必填</span>
+              </div>
+              <button type="button" id="audioBtn" class="drop" data-drop="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac">
+                <span class="drop__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
+                </span>
+                <span class="drop__text">
+                  <b id="audioLabel">选择音频文件</b>
+                  <small>mp3 / m4a / wav / ogg / flac</small>
+                </span>
               </button>
+              <p class="status" id="audioStatus"></p>
             </div>
-            <div class="upload-item">
-              <span class="file-label">点击上传音乐文件</span>
-              <button type="button" id="audioBtn" class="dropzone file-box">
-                <span id="audioLabel" class="dz-hint">未选择文件</span>
+
+            <div class="picker">
+              <div class="picker__head">
+                <span class="picker__name">歌词</span>
+                <span class="tag">选填</span>
+              </div>
+              <button type="button" id="lrcBtn" class="drop" data-drop=".lrc,.txt,text/plain">
+                <span class="drop__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+                </span>
+                <span class="drop__text">
+                  <b id="lrcLabel">选择 .lrc 歌词</b>
+                  <small>需带 [mm:ss] 时间轴，自动识别编码</small>
+                </span>
               </button>
+              <p class="status" id="lrcStatus"></p>
             </div>
           </div>
         </div>
 
-        <div class="actions">
-          <button type="submit" id="startBtn" class="primary" disabled>
-            开始播放 <span class="arr">→</span>
+        <hr class="rule">
+
+        <div class="card__foot">
+          <button type="submit" id="startBtn" class="cta">
+            <span>开始播放</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
-          <p class="hint-line">进入播放页后，点击任意处即可 播放 / 暂停</p>
+          <p class="req-list" id="reqList" role="status" aria-live="polite">还需填写：标题、歌手、音乐</p>
+          <p class="setup__note">进入后点击任意处播放 / 暂停 · <kbd>Esc</kbd> 返回</p>
         </div>
       </form>
+
+      <p class="setup__foot">所有文件只在你的浏览器里处理，不会上传到任何服务器。</p>
     </div>
 
     <input type="file" id="fileCover" accept="image/*" hidden>
@@ -68,28 +116,32 @@
     <input type="file" id="fileLrc" accept=".lrc,.txt,text/plain" hidden>
   </section>
 
-  <section id="playerView" class="view">
-    <canvas id="auroraCanvas" class="aurora" aria-hidden="true"></canvas>
-
-    <div class="player">
-      <div class="player-main">
-        <div class="art-stack">
-          <div class="cover-frame" id="coverFrame">
-            <img id="coverImg" alt="album cover">
-            <span class="cf-note">♪</span>
-          </div>
-          <div class="meta">
-            <h2 id="displayTitle">歌曲标题</h2>
-            <p id="displayArtist">歌手</p>
-          </div>
+  <!-- ══════════════ PLAYER ══════════════ -->
+  <!-- Recording surface. Deliberately free of controls and chrome:
+       nothing here should be captured in a screen recording. -->
+  <section id="playerView" class="view view--player" tabindex="-1">
+    <div class="stage">
+      <figure class="art">
+        <div class="art__glow" aria-hidden="true"></div>
+        <div class="art__frame" id="coverFrame">
+          <img id="coverImg" alt="专辑封面">
+          <span class="art__note" aria-hidden="true">♪</span>
         </div>
+        <figcaption class="art__meta">
+          <h2 id="displayTitle">歌曲标题</h2>
+          <p id="displayArtist">歌手</p>
+        </figcaption>
+      </figure>
 
-        <div class="lyrics-wrap">
-          <div class="lyrics-scroller" id="lyricsScroller"></div>
+      <div class="lyrics">
+        <div class="lyrics__viewport">
+          <div class="lyrics__track" id="lyricsScroller"></div>
         </div>
       </div>
     </div>
   </section>
+
+  <div class="toast" id="toast" role="alert" aria-live="assertive" hidden></div>
 
   <audio id="audioEl" preload="metadata"></audio>
 
