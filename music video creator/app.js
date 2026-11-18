@@ -217,6 +217,19 @@ function togglePlay() {
   else els.audio.pause();
 }
 
+/* R: rewind to the start and pause, so the next P begins from the beginning */
+function resetPlayback() {
+  userControlled = true;
+  pendingAutoplay = false;
+  if (!els.audio.src) return;
+  els.audio.pause();
+  try { els.audio.currentTime = 0; } catch { /* not seekable yet */ }
+  curIdx = -1;
+  updateLyric(0);
+  centerOn(Math.max(0, curIdx));
+  showHud();
+}
+
 function updatePlayIcon(playing) {
   const path = els.hudState.querySelector('path');
   path.setAttribute('d', playing ? 'M7 5h4v14H7zM13 5h4v14h-4z' : 'M8 5l11 7-11 7z');
@@ -707,15 +720,18 @@ $$('.hud button').forEach((btn) => {
 
 document.addEventListener('keydown', (e) => {
   const tag = document.activeElement && document.activeElement.tagName;
-  if (tag === 'INPUT' || (tag === 'BUTTON' && e.code === 'Space')) return;
+  if (tag === 'INPUT') return;
   if (!els.playerView.classList.contains('active')) return;
   if (e.key === 'Escape') {
     e.preventDefault();
     if (document.fullscreenElement) return; // let the browser exit fullscreen first
     switchView('setup');
-  } else if (e.code === 'Space' || e.key === 'p' || e.key === 'P') {
+  } else if (e.key === 'p' || e.key === 'P') {
     e.preventDefault();
     togglePlay();
+  } else if (e.key === 'r' || e.key === 'R') {
+    e.preventDefault();
+    resetPlayback();
   } else if (e.key === 'f' || e.key === 'F') {
     e.preventDefault();
     toggleFullscreen();
