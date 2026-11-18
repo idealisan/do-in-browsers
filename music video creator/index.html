@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Music Video Creator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230a0a0d'/><text x='50' y='72' font-size='64' text-anchor='middle' fill='%237c6bff'>♪</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-view="setup">
+
+<!-- ambient background for the editor chrome -->
+<div class="app-bg" aria-hidden="true"><span></span><span></span></div>
+
+<!-- ══════════════════════ SETUP / EDITOR ══════════════════════ -->
+<section id="setupView" class="view view--setup active">
+  <div class="setup">
+    <header class="setup__head">
+      <div class="brand"><span class="brand__mark">♪</span> Music Video Creator</div>
+      <p class="lede">填好信息、上传素材，然后进入干净的录制画面。所有文件只在你的浏览器里处理，不会上传。</p>
+    </header>
+
+    <form id="setupForm" class="form" novalidate>
+      <!-- orientation -->
+      <section class="section">
+        <div class="section__title">画面方向 <span>录制比例</span></div>
+        <div class="seg" id="orientSeg" role="group" aria-label="画面方向">
+          <button type="button" class="seg__btn is-active" data-orient="landscape">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/></svg>
+            <span>横屏 <small>16:9</small></span>
+          </button>
+          <button type="button" class="seg__btn" data-orient="portrait">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/></svg>
+            <span>竖屏 <small>9:16</small></span>
+          </button>
+        </div>
+      </section>
+
+      <!-- text info -->
+      <section class="section">
+        <div class="section__title">歌曲信息 <span>点击字段即可填写</span></div>
+        <div class="fields">
+          <label class="field" id="fieldTitle">
+            <span class="field__label">歌曲名称 <i class="req">必填</i></span>
+            <input id="titleInput" type="text" placeholder="例如：夜航西飞" autocomplete="off" spellcheck="false">
+          </label>
+          <label class="field" id="fieldArtist">
+            <span class="field__label">歌手 <i class="req">必填</i></span>
+            <input id="artistInput" type="text" placeholder="歌手 / 艺术家" autocomplete="off" spellcheck="false">
+          </label>
+          <label class="field field--wide" id="fieldAlbum">
+            <span class="field__label">专辑名 <i class="opt">选填</i></span>
+            <input id="albumInput" type="text" placeholder="专辑名称" autocomplete="off" spellcheck="false">
+          </label>
+        </div>
+      </section>
+
+      <!-- assets -->
+      <section class="section">
+        <div class="section__title">素材 <span>点击选择或拖入文件</span></div>
+        <div class="assets">
+          <button type="button" id="coverBtn" class="drop drop--cover" data-drop="image/*" aria-label="上传专辑封面">
+            <img id="coverPreview" alt="封面预览" hidden>
+            <span class="drop__ph" id="coverPh">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>
+              <b>专辑封面</b><small>点击或拖入图片</small>
+            </span>
+          </button>
+          <div class="assets__stack">
+            <button type="button" id="audioBtn" class="drop" data-drop="audio/*" aria-label="上传音乐">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
+              <span class="drop__txt"><b id="audioLabel">音乐文件 <i class="req">必填</i></b><small id="audioHint">mp3 / m4a / wav / ogg / flac</small></span>
+            </button>
+            <button type="button" id="lrcBtn" class="drop" data-drop=".lrc,.txt,text/plain" aria-label="上传 LRC 歌词">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+              <span class="drop__txt"><b id="lrcLabel">LRC 歌词 <i class="opt">选填</i></b><small id="lrcHint">带 [mm:ss] 时间轴，自动识别编码</small></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ambience -->
+      <section class="section section--compact">
+        <div class="section__title">背景氛围 <span>低调的彩色晕染</span></div>
+        <label class="range">
+          <span>光晕强度</span>
+          <input id="glowRange" type="range" min="0" max="100" value="45">
+          <output id="glowOut">45</output>
+        </label>
+      </section>
+
+      <div class="actions">
+        <button type="submit" id="startBtn" class="cta">
+          <span>进入录制画面</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="req-list" id="reqList" role="status" aria-live="polite"></p>
+        <p class="tip">进入后：<kbd>点击画面</kbd> 播放/暂停 · <kbd>Space</kbd> 播放/暂停 · <kbd>Esc</kbd> 返回编辑 · <kbd>F</kbd> 全屏</p>
+      </div>
+    </form>
+  </div>
+
+  <input type="file" id="fileCover" accept="image/*" hidden>
+  <input type="file" id="fileAudio" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac" hidden>
+  <input type="file" id="fileLrc" accept=".lrc,.txt,text/plain" hidden>
+</section>
+
+<!-- ══════════════════════ PLAYER / RECORDING SURFACE ══════════════════════ -->
+<section id="playerView" class="view view--player" tabindex="-1">
+  <div class="stage stage--landscape" id="stage">
+    <div class="stage__bg" aria-hidden="true">
+      <div class="glow glow--a"></div>
+      <div class="glow glow--b"></div>
+      <div class="stage__vignette"></div>
+    </div>
+
+    <div class="stage__content">
+      <button type="button" class="cover" id="coverBox" aria-label="更换专辑封面">
+        <img id="coverImg" alt="专辑封面" hidden>
+        <span class="cover__ph" id="coverPh"><span class="cover__plus">＋</span><small>点击上传封面</small></span>
+      </button>
+
+      <div class="meta">
+        <h1 class="meta__title inline" data-field="title" id="displayTitle" title="点击修改">歌曲名称</h1>
+        <p class="meta__artist inline" data-field="artist" id="displayArtist" title="点击修改">歌手</p>
+        <p class="meta__album inline" data-field="album" id="displayAlbum" title="点击修改">专辑名</p>
+      </div>
+
+      <div class="lyrics" id="lyricsBox">
+        <div class="lyrics__viewport"><div class="lyrics__track" id="lyricsTrack"></div></div>
+        <button type="button" class="lyrics__ph" id="lyricsPh">点击上传 LRC 歌词</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HUD: fades out while recording, returns on mouse move -->
+  <div class="hud" id="hud">
+    <button type="button" data-hud="edit" title="返回编辑 (Esc)">编辑</button>
+    <button type="button" data-hud="orient" id="hudOrient" title="切换方向">横屏 16:9</button>
+    <button type="button" data-hud="fullscreen" title="全屏 (F)">全屏</button>
+    <span class="hud__hint">点击画面 播放 / 暂停</span>
+  </div>
+
+  <div class="center-icon" id="centerIcon" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="alert" aria-live="assertive" hidden></div>
+<audio id="audioEl" preload="metadata"></audio>
+<script src="app.js"></script>
+</body>
+</html>
