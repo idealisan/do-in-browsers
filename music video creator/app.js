@@ -42,8 +42,8 @@ const els = {
   lyricsTrack: $('#lyricsTrack'),
   lyricsPh: $('#lyricsPh'),
   hud: $('#hud'),
+  hudState: $('#hudState'),
   hudOrient: $('#hudOrient'),
-  centerIcon: $('#centerIcon'),
   toast: $('#toast'),
   audio: $('#audioEl'),
 };
@@ -195,33 +195,36 @@ requestAnimationFrame(pulseLoop);
 /* =========================================================
    playback
    ========================================================= */
+let pendingAutoplay = false; // start only once the floating HUD has faded out
+let userControlled = false;
+
+function startPlayback() {
+  resumeAudio();
+  const p = els.audio.play();
+  if (p && typeof p.catch === 'function') {
+    p.catch(() => toast('无法播放这个音频，试试换个 mp3 / m4a / wav'));
+  }
+}
+
 function togglePlay() {
   if (!els.audio.src) {
     toast('还没有音乐，点「编辑」上传一个音频文件吧');
     return;
   }
-  resumeAudio();
-  if (els.audio.paused) {
-    const p = els.audio.play();
-    if (p && typeof p.catch === 'function') {
-      p.catch(() => toast('无法播放这个音频，试试换个 mp3 / m4a / wav'));
-    }
-  } else {
-    els.audio.pause();
-  }
+  userControlled = true;   // manual input cancels the delayed autoplay
+  pendingAutoplay = false;
+  if (els.audio.paused) startPlayback();
+  else els.audio.pause();
 }
 
-function flashIcon(playing) {
-  const path = els.centerIcon.querySelector('path');
+function updatePlayIcon(playing) {
+  const path = els.hudState.querySelector('path');
   path.setAttribute('d', playing ? 'M7 5h4v14H7zM13 5h4v14h-4z' : 'M8 5l11 7-11 7z');
-  els.centerIcon.classList.add('show');
-  clearTimeout(flashIcon.t);
-  flashIcon.t = setTimeout(() => els.centerIcon.classList.remove('show'), 550);
 }
 
-els.audio.addEventListener('play', () => { flashIcon(true); });
-els.audio.addEventListener('pause', () => { flashIcon(false); });
-els.audio.addEventListener('ended', () => { flashIcon(false); });
+els.audio.addEventListener('play', () => updatePlayIcon(true));
+els.audio.addEventListener('pause', () => updatePlayIcon(false));
+els.audio.addEventListener('ended', () => updatePlayIcon(false));
 els.audio.addEventListener('error', () => {
   toast('这个音频打不开，换一个 mp3 / m4a / wav 试试', 4200);
 });
@@ -290,6 +293,29 @@ function decodeLyrics(file) {
   });
 }
 
+/* Landscape layout follows the actual width of the loaded lyrics: short lines
+   get a narrower lyric column so the whole composition stays balanced. */
+function adjustLandscapeLayout() {
+  if (state.orientation !== 'landscape') return;
+  const stageW = els.stage.clientWidth;
+  if (!stageW) return;
+
+  let lyricCol = 47; // default split, also used when there are no lyrics
+  if (state.lrc.length && lines.length) {
+    const cs = getComputedStyle(lines[0]);
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    let maxW = 0;
+    for (const item of state.lrc) maxW = Math.max(maxW, ctx.measureText(item.text).width);
+    lyricCol = (maxW * 1.42) / stageW * 100; // active line is scaled + breathing room
+    lyricCol = Math.max(36, Math.min(58, lyricCol));
+  }
+  const coverCol = Math.max(22, Math.min(33, 80 - lyricCol));
+  els.lyricsBox.classList.toggle('is-compact', lyricCol <= 44 && state.lrc.length > 0);
+  els.stage.style.setProperty('--lyric-col', `${lyricCol.toFixed(1)}cqw`);
+  els.stage.style.setProperty('--cover-col', `${coverCol.toFixed(1)}cqw`);
+}
+
 function renderLyrics() {
   els.lyricsTrack.innerHTML = '';
   els.lyricsTrack.style.transition = 'none'; // place the first line instantly
@@ -299,6 +325,7 @@ function renderLyrics() {
   els.lyricsBox.classList.toggle('has-lyrics', state.lrc.length > 0);
   if (!state.lrc.length) {
     els.lyricsTrack.style.transform = '';
+    adjustLandscapeLayout();
     return;
   }
   const frag = document.createDocumentFragment();
@@ -315,6 +342,7 @@ function renderLyrics() {
   });
   els.lyricsTrack.appendChild(frag);
   lines = [...els.lyricsTrack.children];
+  adjustLandscapeLayout();
 }
 
 function updateLyric(t) {
@@ -352,7 +380,7 @@ function centerOn(idx) {
   els.lyricsTrack.style.transform = `translateY(${Math.round(ty)}px)`;
 }
 
-window.addEventListener('resize', () => centerOn(curIdx));
+window.addEventListener('resize', () => { adjustLandscapeLayout(); centerOn(curIdx); });
 
 /* =========================================================
    text fields (both editor + inline in the player)
@@ -581,6 +609,7 @@ function setOrientation(mode) {
   els.stage.classList.toggle('stage--portrait', mode === 'portrait');
   els.hudOrient.textContent = mode === 'landscape' ? '横屏 16:9' : '竖屏 9:16';
   $$('.seg__btn').forEach((b) => b.classList.toggle('is-active', b.dataset.orient === mode));
+  adjustLandscapeLayout();
   requestAnimationFrame(() => centerOn(curIdx));
 }
 
@@ -610,7 +639,15 @@ let hudTimer = 0;
 function showHud() {
   els.hud.classList.remove('hide');
   clearTimeout(hudTimer);
-  hudTimer = setTimeout(() => els.hud.classList.add('hide'), 2400);
+  hudTimer = setTimeout(() => {
+    els.hud.classList.add('hide');
+    hudTimer = 0;
+    // playback waits until the hint is gone, so it never shows in a recording
+    if (pendingAutoplay && !userControlled) {
+      pendingAutoplay = false;
+      if (els.audio.src) startPlayback();
+    }
+  }, 2400);
 }
 els.playerView.addEventListener('mousemove', showHud);
 
@@ -623,12 +660,18 @@ function switchView(name) {
   els.playerView.classList.toggle('active', toPlayer);
   els.body.dataset.view = name;
   if (toPlayer) {
+    pendingAutoplay = true;
+    userControlled = false;
     els.playerView.focus({ preventScroll: true });
     showHud();
     renderLyrics();
     updateLyric(els.audio.currentTime);
     requestAnimationFrame(() => centerOn(curIdx));
   } else {
+    pendingAutoplay = false;
+    clearTimeout(hudTimer);
+    hudTimer = 0;
+    els.hud.classList.remove('hide');
     if (!els.audio.paused) els.audio.pause();
     els.setupView.scrollTop = 0;
   }
@@ -644,9 +687,7 @@ els.setupForm.addEventListener('submit', (e) => {
     return;
   }
   ['title', 'artist', 'album'].forEach((f) => renderText(f));
-  switchView('player');
-  resumeAudio();
-  els.audio.play().catch(() => {});
+  switchView('player'); // autoplay is kicked off by showHud() once the HUD hides
 });
 
 els.playerView.addEventListener('click', (e) => {
@@ -672,7 +713,7 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (document.fullscreenElement) return; // let the browser exit fullscreen first
     switchView('setup');
-  } else if (e.code === 'Space') {
+  } else if (e.code === 'Space' || e.key === 'p' || e.key === 'P') {
     e.preventDefault();
     togglePlay();
   } else if (e.key === 'f' || e.key === 'F') {

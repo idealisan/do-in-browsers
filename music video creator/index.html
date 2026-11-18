@@ -96,7 +96,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
         <p class="req-list" id="reqList" role="status" aria-live="polite"></p>
-        <p class="tip">进入后：<kbd>点击画面</kbd> 播放/暂停 · <kbd>Space</kbd> 播放/暂停 · <kbd>Esc</kbd> 返回编辑 · <kbd>F</kbd> 全屏</p>
+        <p class="tip">进入后：<kbd>点击画面</kbd> / <kbd>Space</kbd> / <kbd>P</kbd> 播放暂停（录屏可用键盘控制） · <kbd>Esc</kbd> 返回编辑 · <kbd>F</kbd> 全屏</p>
       </div>
     </form>
   </div>
@@ -110,8 +110,8 @@
 <section id="playerView" class="view view--player" tabindex="-1">
   <div class="stage stage--landscape" id="stage">
     <div class="stage__bg" aria-hidden="true">
-      <div class="glow glow--a"></div>
-      <div class="glow glow--b"></div>
+      <div class="glow-drift glow-drift--a"><div class="glow glow--a"></div></div>
+      <div class="glow-drift glow-drift--b"><div class="glow glow--b"></div></div>
       <div class="stage__vignette"></div>
     </div>
 
@@ -136,14 +136,13 @@
 
   <!-- HUD: fades out while recording, returns on mouse move -->
   <div class="hud" id="hud">
+    <span class="hud__state" id="hudState" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
+    </span>
     <button type="button" data-hud="edit" title="返回编辑 (Esc)">编辑</button>
     <button type="button" data-hud="orient" id="hudOrient" title="切换方向">横屏 16:9</button>
     <button type="button" data-hud="fullscreen" title="全屏 (F)">全屏</button>
-    <span class="hud__hint">点击画面 播放 / 暂停</span>
-  </div>
-
-  <div class="center-icon" id="centerIcon" aria-hidden="true">
-    <svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>
+    <span class="hud__hint">点击 / Space / P 播放暂停</span>
   </div>
 </section>
 
