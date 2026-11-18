@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070a">
+<title>SRT / LRC Maker · 音频转带时间戳字幕歌词</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230a0f12'/><text x='50' y='70' font-size='56' text-anchor='middle' fill='%233ddc97'>Aa</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-bg" aria-hidden="true"><span></span><span></span></div>
+
+<main class="wrap">
+  <header class="head">
+    <div class="brand"><span class="brand__mark">Aa</span> SRT / LRC Maker</div>
+    <p class="lede">上传音频或视频，调用云端 AI 生成带时间戳的字幕（SRT）和歌词（LRC）。生成的文件可以直接给 Music Video Creator 使用。</p>
+    <div class="privacy">🔒 文件只在浏览器里解码，随后仅发送给你配置的 API；Key 只有勾选后才保存在本机。</div>
+  </header>
+
+  <div class="layout">
+    <!-- ══════════════ CONFIG ══════════════ -->
+    <section class="panel" aria-labelledby="configTitle">
+      <h2 class="panel__title" id="configTitle"><span class="step">1</span> API 配置</h2>
+
+      <div class="field">
+        <label for="provider">服务商</label>
+        <select id="provider">
+          <option value="gemini">Google AI Studio（Gemini）</option>
+          <option value="cloudflare">Cloudflare Workers AI（Whisper）</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="apiKey">API Key / Token <i class="req">必填</i></label>
+        <div class="input-wrap">
+          <input id="apiKey" type="password" placeholder="AI Studio: AIza… / Cloudflare: API Token" autocomplete="off" spellcheck="false">
+          <button type="button" id="toggleKey" class="mini" title="显示 / 隐藏">显示</button>
+        </div>
+      </div>
+
+      <div class="field" id="accountRow" hidden>
+        <label for="accountId">Cloudflare Account ID <i class="req">必填</i></label>
+        <input id="accountId" type="text" placeholder="32 位十六进制 Account ID" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="field" id="modelRow">
+        <label for="model">模型</label>
+        <input id="model" type="text" placeholder="gemini-2.5-flash" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="field">
+        <label for="endpoint">API 地址 <i class="opt">可自定义</i></label>
+        <input id="endpoint" type="text" placeholder="完整接口 URL" autocomplete="off" spellcheck="false">
+        <div class="row-between">
+          <small>可填自建代理地址；Cloudflare 直连会被浏览器 CORS 拦截。</small>
+          <button type="button" id="resetEndpoint" class="link-btn">恢复默认</button>
+        </div>
+      </div>
+
+      <label class="check" for="remember">
+        <input type="checkbox" id="remember">
+        <span>在本机浏览器保存以上配置（含 API Key），下次自动填充</span>
+      </label>
+      <p class="warn" id="rememberWarn" hidden>提示：保存在 localStorage 的 Key 可被本机脚本读取，公共电脑请勿勾选。</p>
+
+      <div class="note" id="cfNote" hidden>
+        <b>Cloudflare 直连说明</b>
+        <p>官方 <code>api.cloudflare.com</code> 不允许浏览器跨域请求。请部署随附的 <code>worker.js</code>（Cloudflare Workers，免费），把它的地址（例如 <code>https://xxx.workers.dev/whisper</code>）填到上方「API 地址」。Worker 会用请求头里的 Token 与 Account ID 转发到 Whisper。</p>
+      </div>
+    </section>
+
+    <!-- ══════════════ GENERATE ══════════════ -->
+    <section class="panel" aria-labelledby="genTitle">
+      <h2 class="panel__title" id="genTitle"><span class="step">2</span> 上传并生成</h2>
+
+      <button type="button" id="fileDrop" class="drop" aria-label="上传音频或视频">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5l5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+        <span class="drop__title">点击选择，或拖入音频 / 视频</span>
+        <span class="drop__sub">MP3 · OGG · AAC / M4A · WAV · FLAC · MP4 · WebM</span>
+      </button>
+      <p class="status" id="fileStatus">还没有选择文件</p>
+
+      <div class="file-card" id="fileCard" hidden>
+        <div class="file-card__icon" id="fileIcon">♪</div>
+        <div class="file-card__info">
+          <b id="fileName">—</b>
+          <small id="fileMeta">—</small>
+        </div>
+        <button type="button" id="clearFile" class="mini">移除</button>
+      </div>
+
+      <div class="opt-row">
+        <label class="check" for="wantSrt"><input type="checkbox" id="wantSrt" checked><span>输出 SRT 字幕</span></label>
+        <label class="check" for="wantLrc"><input type="checkbox" id="wantLrc" checked><span>输出 LRC 歌词</span></label>
+      </div>
+
+      <button type="button" id="generateBtn" class="cta">
+        <span>生成字幕 / 歌词</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <p class="status status--work" id="workStatus" role="status" aria-live="polite"></p>
+
+      <!-- results -->
+      <div class="results" id="results" hidden>
+        <div class="results__head">
+          <div class="tabs" role="tablist">
+            <button type="button" class="tab is-active" data-tab="srt">SRT 字幕</button>
+            <button type="button" class="tab" data-tab="lrc">LRC 歌词</button>
+            <button type="button" class="tab" data-tab="raw">原始返回</button>
+          </div>
+          <span class="results__meta" id="resultMeta"></span>
+        </div>
+        <textarea id="resultText" spellcheck="false" aria-label="生成结果（可编辑）"></textarea>
+        <div class="results__actions">
+          <button type="button" id="downloadSrt" class="btn">下载 .srt</button>
+          <button type="button" id="downloadLrc" class="btn">下载 .lrc</button>
+          <button type="button" id="copyBtn" class="btn btn--ghost">复制当前内容</button>
+          <span class="hint" id="copyHint"></span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <p class="footnote">当前版本：由音频整体识别生成时间戳字幕 / 歌词。「提供文本再做精确时间戳匹配」留待后续迭代。</p>
+</main>
+
+<div class="toast" id="toast" role="alert" aria-live="assertive" hidden></div>
+<input type="file" id="fileInput" hidden accept="audio/*,video/mp4,video/webm,.mp3,.ogg,.oga,.m4a,.aac,.wav,.flac,.mp4,.webm">
+<script src="app.js"></script>
+</body>
+</html>
