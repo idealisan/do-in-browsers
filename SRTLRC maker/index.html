@@ -46,8 +46,12 @@
       </div>
 
       <div class="field" id="modelRow">
-        <label for="model">模型</label>
-        <input id="model" type="text" placeholder="gemini-2.5-flash" autocomplete="off" spellcheck="false">
+        <label for="model">模型 <i class="opt">自动获取</i></label>
+        <div class="input-wrap">
+          <select id="model"><option value="">填写 API Key 后自动获取</option></select>
+          <button type="button" id="refreshModels" class="mini" title="重新获取模型列表">刷新</button>
+        </div>
+        <small class="field-hint" id="modelHint">模型列表由对应服务商的 API 自动查询</small>
       </div>
 
       <div class="field">

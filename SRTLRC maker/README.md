@@ -7,12 +7,15 @@
 
 1. 用静态服务器打开本目录（例如在本目录运行 `python3 -m http.server 8000`）。
 2. **API 配置**
-   - **Google AI Studio**：填 API Key，默认模型 `gemini-2.5-flash`，默认接口为
-     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`。
-     该接口支持浏览器跨域，可直接调用。
+   - **Google AI Studio**：填 API Key 后，模型下拉框会调用 `GET /v1beta/models` 自动列出支持
+     `generateContent` 的 Gemini 模型（已排除 TTS、图像、Embedding 等无关模型），无需手输
+     模型 ID；默认接口随所选模型自动生成。
    - **Cloudflare Workers AI**：填 API Token 和 Account ID。官方 `api.cloudflare.com`
      **不允许浏览器跨域直连**，需要部署随附的 `worker.js`，并把它的地址
      （如 `https://srtlrc-proxy.<subdomain>.workers.dev/whisper`）填入「API 地址」。
+     模型下拉框通过 Worker 的 `GET /models` 查询可用的语音识别模型（如 Whisper）。
+   - 模型列表在填写 Key（Cloudflare 还需 Account ID）后自动获取，也可点「刷新」重新拉取；
+     获取失败时会保留当前模型，不影响继续使用。
 3. 上传 MP3 / OGG / AAC / M4A / WAV / FLAC / MP4 / WebM。
    - 视频会先由浏览器解码并**自动抽取音频流**（需要浏览器支持该文件格式的解码）。
    - 统一转成 16 kHz 单声道 WAV 后发送，以控制请求体积。

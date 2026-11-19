@@ -11,6 +11,8 @@ const els = {
   accountId: $('#accountId'),
   modelRow: $('#modelRow'),
   model: $('#model'),
+  modelHint: $('#modelHint'),
+  refreshModels: $('#refreshModels'),
   endpoint: $('#endpoint'),
   resetEndpoint: $('#resetEndpoint'),
   remember: $('#remember'),
@@ -42,8 +44,8 @@ const els = {
 
 const DEFAULTS = {
   gemini: {
-    model: 'gemini-2.5-flash',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    model: 'gemini-3.5-flash-lite',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent',
   },
   cloudflare: {
     model: '@cf/openai/whisper',
@@ -94,7 +96,7 @@ function applyProviderDefaults(force = false) {
   if (force || !els.endpoint.value || Object.values(DEFAULTS).some((x) => x.endpoint === els.endpoint.value)) {
     cfg.endpoint = d.endpoint;
   }
-  els.model.value = cfg.model;
+  setModelValue(cfg.model, cfg.model);
   els.endpoint.value = cfg.endpoint;
   els.accountRow.hidden = cfg.provider !== 'cloudflare';
   els.modelRow.hidden = cfg.provider !== 'gemini';
@@ -143,7 +145,10 @@ function saveConfig() {
 ['provider', 'apiKey', 'accountId', 'model', 'endpoint'].forEach((k) => {
   els[k].addEventListener('input', () => { readConfigFromUI(); saveConfig(); });
 });
-els.provider.addEventListener('change', () => applyProviderDefaults(true));
+els.provider.addEventListener('change', () => {
+  applyProviderDefaults(true);
+  fetchModels();
+});
 els.resetEndpoint.addEventListener('click', () => {
   cfg.endpoint = DEFAULTS[cfg.provider].endpoint;
   els.endpoint.value = cfg.endpoint;
@@ -160,7 +165,151 @@ els.toggleKey.addEventListener('click', () => {
   els.apiKey.type = show ? 'text' : 'password';
   els.toggleKey.textContent = show ? '隐藏' : '显示';
 });
+/* =========================================================
+   model discovery — query the provider's own model list API
+   so users never have to type a model id by hand
+   ========================================================= */
+let modelTimer = 0;
+let modelFetchSeq = 0;
+
+function setModelValue(id, label) {
+  if (!id) return;
+  let opt = [...els.model.options].find((o) => o.value === id);
+  if (!opt) {
+    opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = label || id;
+    els.model.appendChild(opt);
+  }
+  els.model.value = id;
+}
+
+function modelStatus(msg, err = false) {
+  els.modelHint.textContent = msg;
+  els.modelHint.classList.toggle('is-error', err);
+}
+
+function syncEndpointForModel() {
+  if (cfg.provider === 'gemini') {
+    if (/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/[^:]+:generateContent$/.test(cfg.endpoint)) {
+      cfg.endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent`;
+    }
+  } else if (/^https:\/\/api\.cloudflare\.com\/.*\/ai\/run\/[^/]+$/.test(cfg.endpoint)) {
+    cfg.endpoint = cfg.endpoint.replace(/\/ai\/run\/[^/]+$/, `/ai/run/${cfg.model}`);
+  }
+}
+
+function modelListUrl() {
+  if (cfg.provider === 'gemini') return 'https://generativelanguage.googleapis.com/v1beta/models';
+  const base = cfg.endpoint || DEFAULTS.cloudflare.endpoint;
+  const origin = (base.match(/^https?:\/\/[^/]+/) || ['https://api.cloudflare.com'])[0];
+  if (/api\.cloudflare\.com/.test(origin)) {
+    return `${origin}/client/v4/accounts/${encodeURIComponent(cfg.accountId)}/ai/models/search?search=whisper&per_page=100`;
+  }
+  return `${origin}/models`;
+}
+
+function parseGeminiModels(json) {
+  const arr = Array.isArray(json.models) ? json.models : [];
+  return arr
+    .filter((m) => {
+      const name = String(m.name || '');
+      const methods = m.supportedGenerationMethods || [];
+      return methods.includes('generateContent') && /^models\/gemini-/.test(name)
+        && !/(tts|image|embedding|live|transcribe|omni|robotics|decision|research|agent|computer-use)/i.test(name);
+    })
+    .map((m) => {
+      const id = String(m.name).replace(/^models\//, '');
+      return { id, label: `${m.displayName || id}  ·  ${id}` };
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function parseCloudflareModels(json) {
+  const arr = Array.isArray(json.result) ? json.result : [];
+  const map = (m) => {
+    const task = (m.task && m.task.name) || m.task || '';
+    return {
+      id: String(m.id || m.name || ''),
+      label: `${m.name || m.id || ''}${task ? `  ·  ${task}` : ''}`,
+      hay: `${m.id || ''} ${m.name || ''} ${task}`,
+    };
+  };
+  const all = arr.map(map).filter((m) => m.id);
+  const speech = all.filter((m) => /whisper|asr|speech|transcri/i.test(m.hay));
+  const list = speech.length ? speech : all;
+  return list.sort((a, b) => a.id.localeCompare(b.id)).map(({ id, label }) => ({ id, label }));
+}
+
+function populateModels(list) {
+  els.model.innerHTML = '';
+  for (const m of list) {
+    const o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.label;
+    els.model.appendChild(o);
+  }
+  const preferred = cfg.provider === 'gemini'
+    ? ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen', 'gemini-3.6-flash'].find((id) => list.some((m) => m.id === id))
+    : null;
+  const chosen = cfg.model && list.some((m) => m.id === cfg.model) ? cfg.model : (preferred || list[0].id);
+  setModelValue(chosen, chosen);
+  cfg.model = chosen;
+  syncEndpointForModel();
+  els.endpoint.value = cfg.endpoint;
+  saveConfig();
+}
+
+async function fetchModels() {
+  clearTimeout(modelTimer);
+  readConfigFromUI();
+  if (!cfg.apiKey) { modelStatus('请先填写 API Key 以自动获取模型'); return; }
+  if (cfg.provider === 'cloudflare' && !cfg.accountId) { modelStatus('请先填写 Account ID 以自动获取模型'); return; }
+
+  const seq = ++modelFetchSeq;
+  els.model.innerHTML = '<option value="">正在查询模型…</option>';
+  modelStatus('正在查询可用模型…');
+  try {
+    const url = modelListUrl();
+    const res = await fetch(url, {
+      headers: cfg.provider === 'gemini'
+        ? { 'x-goog-api-key': cfg.apiKey }
+        : { 'X-API-Key': cfg.apiKey, 'X-Account-Id': cfg.accountId },
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`接口 ${res.status}：${text.replace(/\s+/g, ' ').slice(0, 160)}`);
+    if (seq !== modelFetchSeq) return;
+    const list = cfg.provider === 'gemini' ? parseGeminiModels(JSON.parse(text)) : parseCloudflareModels(JSON.parse(text));
+    if (!list.length) throw new Error('没有找到可用于生成的模型');
+    populateModels(list);
+    modelStatus(`已获取 ${list.length} 个可用模型`);
+  } catch (err) {
+    if (seq !== modelFetchSeq) return;
+    const keep = cfg.model;
+    els.model.innerHTML = '';
+    setModelValue(keep, `${keep}（当前使用）`);
+    modelStatus(`获取失败：${err.message}`, true);
+  }
+}
+
+function scheduleFetchModels() {
+  clearTimeout(modelTimer);
+  modelTimer = setTimeout(fetchModels, 650);
+}
+
+els.refreshModels.addEventListener('click', fetchModels);
+els.apiKey.addEventListener('input', scheduleFetchModels);
+els.accountId.addEventListener('input', scheduleFetchModels);
+els.model.addEventListener('change', () => {
+  readConfigFromUI();
+  syncEndpointForModel();
+  els.endpoint.value = cfg.endpoint;
+  saveConfig();
+});
+
 if (!loadConfig()) applyProviderDefaults();
+if (cfg.apiKey) fetchModels();
+else modelStatus('请先填写 API Key 以自动获取模型');
 
 /* =========================================================
    file intake

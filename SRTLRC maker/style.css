@@ -61,7 +61,9 @@ code { color: var(--accent); }
 .field select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%), linear-gradient(135deg, var(--dim) 50%, transparent 50%); background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
 .field input:focus, .field select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
 .input-wrap { display: flex; gap: .5rem; }
-.input-wrap input { min-width: 0; }
+.input-wrap input, .input-wrap select { min-width: 0; flex: 1; }
+.field-hint { display: block; margin-top: .35rem; font-size: .72rem; color: var(--dimmer); }
+.field-hint.is-error { color: var(--danger); }
 .mini { flex: none; padding: 0 .8rem; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line); color: var(--dim); font-size: .78rem; }
 .mini:hover { color: var(--text); border-color: var(--accent); }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-top: .4rem; }
